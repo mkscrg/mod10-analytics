@@ -84,8 +84,8 @@ instance HasVal Card where
     getVal (Card v _) = getVal v
 
 
-deck :: [Card]
-deck = [ Card v s | v <- vs, s <- ss ]
+newdeck :: [Card]
+newdeck = [ Card v s | v <- vs, s <- ss ]
   where
     vs = [Ace, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack,
           Queen, King]
