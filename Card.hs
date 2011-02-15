@@ -1,8 +1,8 @@
 module Card where
 
 
-import Data.List
-import System.Random
+import Data.List (sortBy)
+import System.Random (RandomGen, randoms)
 
 
 class HasVal a where
@@ -78,8 +78,8 @@ instance HasVal Card where
     getVal (Card v _) = getVal v
 
 
-newdeck :: [Card]
-newdeck = [ Card v s | v <- vs, s <- ss ]
+newDeck :: [Card]
+newDeck = [ Card v s | v <- vs, s <- ss ]
   where
     vs = [Ace, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack,
           Queen, King]
