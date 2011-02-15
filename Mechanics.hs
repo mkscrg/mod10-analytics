@@ -1,7 +1,8 @@
 --module Mechanics where
-module Main (main) where
+module Main where
 
 
+import Data.List (elemIndex, intersperse)
 import System.Random (RandomGen, newStdGen)
 
 import Card
@@ -11,24 +12,26 @@ main :: IO ()
 main = do
     seed <- newStdGen
     let g = newGame seed
-    print $ deck g
-    print $ stacks g !! 0
-    let g' = pickUp g
-    print $ deck g'
-    print $ stacks g' !! 0
-    return ()
+    uplay g
+
+uplay :: GameState -> IO ()
+uplay g = do
+    print g
+    case g of
+      InPlay {} -> uplay $ play g
+      _         -> return ()
 
 
---play :: GameState -> GameState
---play InPlay {deck=d}    | null d            = Loss
---play InPlay {stacks=ss} | and $ map null ss = Win
---play InPlay {ctr=n}     | n > 1500          = Timeout
-----play InPlay {} = 
---play g = g
+play :: GameState -> GameState
+play InPlay {deck=d}    | null d            = Loss
+play InPlay {stacks=ss} | and $ map null ss = Win
+play InPlay {ctr=n}     | n > 1500          = Timeout
+play g@(InPlay {}) = feedNext $ pickUp g
+play g = g
 
 
 newGame :: (RandomGen g) => g -> GameState
-newGame rgen = let (s, d) = splitAt 43 $ shuffle rgen newDeck
+newGame rgen = let (s, d) = splitAt 15 $ shuffle rgen newDeck
                in InPlay { deck = d
                          , stacks = feedAll s $ replicate 7 []
                          , csi = 0
@@ -50,6 +53,24 @@ pickUp g@(InPlay {deck=d, stacks=ss, csi=i}) =
                       in a ++ s' : tail b
     s = ss !! i
 pickUp g = g
+
+
+feedNext :: GameState -> GameState
+feedNext g@(InPlay {deck=d, stacks=ss, csi=i}) =
+    case nextI of
+    Nothing -> g
+    Just i' -> g { deck = tail d
+                 , stacks = let (a, b) = splitAt i' ss
+                            in a ++ (head d : head b) : tail b
+                 , csi = i'
+                 , ctr = ctr g + 1 }
+  where
+    nextI = let mayI = elemIndex True $ drop (i + 1) $
+                       cycle $ map (not . null) ss
+            in case mayI of
+                 Nothing -> Nothing
+                 Just i' -> Just $ (i + i' + 1) `mod` length ss
+feedNext g = g
 
 
 moveTriplet :: Triplet -> [Card] -> [Card] -> ([Card], [Card])
@@ -82,7 +103,7 @@ feedAll src dst = feeder padSrc dst
     feeder [] d = d
     feeder s  d = let (a, b) = splitAt lend s
                   in feeder b $ zipWith mayCat d a
-    mayCat xs (Just x) = xs ++ [x]
+    mayCat xs (Just x) = x : xs
     mayCat xs Nothing  = xs
     padSrc = map Just src ++ replicate (lend - length src `mod` lend) Nothing
     lend = length dst
@@ -95,7 +116,21 @@ data GameState = Win
                         , stacks :: [[Card]]
                         , csi :: Int
                         , ctr :: Int }
-                 deriving (Show)
+
+instance Show GameState where
+    show Win     = "Win"
+    show Loss    = "Loss"
+    show Timeout = "Timeout"
+    show InPlay {deck=d, stacks=ss, csi=i, ctr=n} =
+        concat $ intersperse "\n" $
+            [" n: " ++ show n, " d: " ++ stackToStr d] ++
+            zipWith (++) (map label [0..(length ss - 1)])
+                         (map stackToStr ss)
+      where
+        stackToStr s = concat $ intersperse " " $ map show (reverse s)
+        label j = (if j == i
+                     then '*'
+                     else ' ') : show j ++ ": "
 
 
 data Triplet = Top
