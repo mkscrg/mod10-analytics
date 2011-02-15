@@ -39,12 +39,6 @@ instance Show Value where
     show Queen = "Q"
     show King  = "K"
 
---instance HasVal Value where
---    getVal Ace = 1
---    getVal v | elem v [Ten, Jack, Queen, King] = 10
---    getVal v | elem v [Two, Three, Four, Five, Six, Seven, Eight, Nine] =
---        read (show v) :: Int
-
 instance HasVal Value where
     getVal Ace   = 1
     getVal Two   = 2

@@ -1,10 +1,8 @@
-module Mechanics
-    (
-      GameState(..)
-    , play
-    , feed
-    , advance
-    ) where
+module Mechanics ( GameState(..)
+                 , play
+                 , feed
+                 , advance
+                 ) where
 
 
 import Data.List
@@ -88,13 +86,14 @@ instance Show GameState where
     show g = cLine ++ dLine ++ sLines
       where
         cLine = "  i: " ++ show (ctr g) ++ "\n"
-        dLine = "  D: " ++ stackStr (deck g)
-        sLines = concat (zipWith (\i s -> (if i == csi g
-                                     then "->"
-                                     else "  ") ++ show i ++ ": " ++ s)
-                                 [0..(length (stacks g) - 1)]
-                                 (map stackStr (stacks g)))
-        stackStr p = concat (intersperse " " (map show (reverse p))) ++ "\n"
+        dLine = "  D: " ++ stackStr (deck g) ++ "\n"
+        sLines = concat $ intersperse "\n" $
+            zipWith (\i s -> (if i == csi g
+                                then "->"
+                                else "  ") ++ show i ++ ": " ++ s)
+                    [0..(length (stacks g) - 1)]
+                    (map stackStr (stacks g))
+        stackStr p = concat (intersperse " " (map show (reverse p)))
 
 
 data UFMode = UFM0
