@@ -1,4 +1,5 @@
-module Mechanics where
+--module Mechanics where
+module Main (main) where
 
 
 import System.Random (RandomGen, newStdGen)
@@ -10,18 +11,20 @@ main :: IO ()
 main = do
     seed <- newStdGen
     let g = newGame seed
+    print $ deck g
     print $ stacks g !! 0
     let g' = pickUp g
+    print $ deck g'
     print $ stacks g' !! 0
     return ()
 
 
-play :: GameState -> GameState
-play InPlay {deck=d}    | null d            = Loss
-play InPlay {stacks=ss} | and $ map null ss = Win
-play InPlay {ctr=n}     | n > 1500          = Timeout
---play InPlay {} = 
-play g = g
+--play :: GameState -> GameState
+--play InPlay {deck=d}    | null d            = Loss
+--play InPlay {stacks=ss} | and $ map null ss = Win
+--play InPlay {ctr=n}     | n > 1500          = Timeout
+----play InPlay {} = 
+--play g = g
 
 
 newGame :: (RandomGen g) => g -> GameState

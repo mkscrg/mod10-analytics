@@ -3,7 +3,7 @@ module Main (main) where
 
 import System.Random (newStdGen)
 
-import Mechanics
+--import Mechanics
 
 
 main :: IO ()
