@@ -1,33 +1,21 @@
---module Mechanics where
-module Main where
+module Mechanics ( play
+                 , newGame
+                 ) where
 
 
-import Data.List (elemIndex, intersperse)
-import System.Random (RandomGen, newStdGen)
+import Data.List ( elemIndex
+                 , intersperse )
+import System.Random ( RandomGen )
 
 import Card
-
-
-main :: IO ()
-main = do
-    seed <- newStdGen
-    let g = newGame seed
-    uplay g
-
-uplay :: GameState -> IO ()
-uplay g = do
-    print g
-    case g of
-      InPlay {} -> uplay $ play g
-      _         -> return ()
 
 
 play :: GameState -> GameState
 play InPlay {deck=d}    | null d            = Loss
 play InPlay {stacks=ss} | and $ map null ss = Win
 play InPlay {ctr=n}     | n > 1500          = Timeout
-play g@(InPlay {}) = feedNext $ pickUp g
-play g = g
+play g@(InPlay {})                          = feedNext $ pickUp g
+play g                                      = g
 
 
 newGame :: (RandomGen g) => g -> GameState
@@ -58,22 +46,22 @@ pickUp g = g
 feedNext :: GameState -> GameState
 feedNext g@(InPlay {deck=d, stacks=ss, csi=i}) =
     case nextI of
-    Nothing -> g
-    Just i' -> g { deck = tail d
-                 , stacks = let (a, b) = splitAt i' ss
-                            in a ++ (head d : head b) : tail b
-                 , csi = i'
-                 , ctr = ctr g + 1 }
+      Nothing -> g { ctr = ctr g + 1 }
+      Just i' -> g { deck = tail d
+                   , stacks = let (a, b) = splitAt i' ss
+                              in a ++ (head d : head b) : tail b
+                   , csi = i'
+                   , ctr = ctr g + 1 }
   where
     nextI = let mayI = elemIndex True $ drop (i + 1) $
-                       cycle $ map (not . null) ss
+                       concat $ replicate 2 $ map (not . null) ss
             in case mayI of
                  Nothing -> Nothing
                  Just i' -> Just $ (i + i' + 1) `mod` length ss
 feedNext g = g
 
 
-moveTriplet :: Triplet -> [Card] -> [Card] -> ([Card], [Card])
+moveTriplet :: Triplet -> [a] -> [a] -> ([a], [a])
 moveTriplet Top    src dst = let (a, b) = splitAt (length src - 2) src
                              in (tail a, dst ++ head a : b)
 moveTriplet Middle src dst = let (a, b) = splitAt 2 src
@@ -82,7 +70,7 @@ moveTriplet Bottom src dst = let (a, b) = splitAt 3 src
                              in (b, dst ++ a)
 
 
-findTriplet :: [Card] -> Maybe Triplet
+findTriplet :: (HasValue a) => [a] -> Maybe Triplet
 findTriplet cs | len >= 3 =
     if valTrip $ head cs : drop (len - 2) cs
       then Just Top

@@ -1,9 +1,10 @@
-module Main (main) where
+module Main ( main ) where
 
 
-import System.Random (newStdGen)
+import System.Random ( newStdGen )
 
---import Mechanics
+import Mechanics
+import Pregame
 
 
 main :: IO ()

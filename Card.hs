@@ -1,12 +1,44 @@
-module Card where
+module Card ( newDeck
+            , shuffle
+            , Card
+            , HasValue(..)
+            ) where
 
 
-import Data.List (sortBy)
-import System.Random (RandomGen, randoms)
+import Data.List ( sortBy )
+import System.Random ( RandomGen
+                     , randoms )
 
 
-class HasVal a where
+newDeck :: [Card]
+newDeck = [ Card v s | v <- vs, s <- ss ]
+  where
+    vs = [Ace, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack,
+          Queen, King]
+    ss = [Club, Diamond, Heart, Spade]
+
+
+shuffle :: RandomGen r => r -> [a] -> [a]
+shuffle rgen xs = map snd (sortBy (\(x, _) (y, _) -> compare x y) zlist)
+  where
+    zlist = zip (take (length xs) (randoms rgen :: [Int])) xs
+
+
+class HasValue a where
     getVal :: a -> Int
+
+
+data Suit = Club
+          | Diamond
+          | Spade
+          | Heart
+            deriving (Eq)
+
+instance Show Suit where
+    show Club    = "c"
+    show Diamond = "d"
+    show Spade   = "s"
+    show Heart   = "h"
 
 
 data Value = Ace
@@ -39,7 +71,7 @@ instance Show Value where
     show Queen = "Q"
     show King  = "K"
 
-instance HasVal Value where
+instance HasValue Value where
     getVal Ace   = 1
     getVal Two   = 2
     getVal Three = 3
@@ -55,38 +87,11 @@ instance HasVal Value where
     getVal King  = 10
 
 
-data Suit = Club
-          | Diamond
-          | Spade
-          | Heart
-            deriving (Eq)
-
-instance Show Suit where
-    show Club    = "c"
-    show Diamond = "d"
-    show Spade   = "s"
-    show Heart   = "h"
-
-
 data Card = Card Value Suit
             deriving (Eq)
 
 instance Show Card where
     show (Card v s) = show v ++ show s
 
-instance HasVal Card where
+instance HasValue Card where
     getVal (Card v _) = getVal v
-
-
-newDeck :: [Card]
-newDeck = [ Card v s | v <- vs, s <- ss ]
-  where
-    vs = [Ace, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack,
-          Queen, King]
-    ss = [Club, Diamond, Heart, Spade]
-
-
-shuffle :: RandomGen r => r -> [a] -> [a]
-shuffle rgen xs = map snd (sortBy (\(x, _) (y, _) -> compare x y) zlist)
-  where
-    zlist = zip (take (length xs) (randoms rgen :: [Int])) xs
