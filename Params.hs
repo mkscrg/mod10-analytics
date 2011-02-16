@@ -35,8 +35,8 @@ validate flags = do
               then True
               else False
     o <- oDef flags
-    return $ RunParams { ngames = nDef flags
-                       , outh = o
+    return $ RunParams { nGames = nDef flags
+                       , outH = o
                        , quiet = q }
   where
     oDef []     = return stdout
@@ -82,8 +82,8 @@ options = [ Option ['h'] ["help"] (NoArg Help)
                    "Prints only results, not full game rounds" ]
 
 
-data RunParams = RunParams { ngames :: Int
-                           , outh :: Handle
+data RunParams = RunParams { nGames :: Int
+                           , outH :: Handle
                            , quiet :: Bool
                            } deriving (Show)
 

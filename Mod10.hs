@@ -1,24 +1,37 @@
 module Main ( main ) where
 
 
---import System.Random ( newStdGen )
+import System.IO ( hClose
+                 , hPrint
+                 , hPutStr )
+import System.Random ( newStdGen )
 
---import Mechanics
+import Mechanics
 import Params
 
 
 main :: IO ()
 main = do
     params <- getParams
-    print params
---    playGame params
+    playGame params
+    hClose $ outH params
 
 
---playGame :: IO ()
---playGame = do
---    seed <- newStdGen
---    let g = newGame seed
---    print $ run g
---  where
---    run g@(InPlay {}) = run $ play g
---    run g             = g
+playGame :: RunParams -> IO ()
+playGame RunParams {nGames=n} | n == 0              = return ()
+playGame rp@(RunParams {nGames=n, outH=h, quiet=q}) = do
+    seed <- newStdGen
+    let g = newGame seed
+    g' <- run g
+    hPrint h g'
+    if not q
+      then hPutStr h "\n\n"
+      else return ()
+    playGame rp { nGames = n - 1 }
+  where
+    run g@(InPlay {}) = do if not q
+                             then do hPrint h g
+                                     hPutStr h "\n"
+                             else return ()
+                           run $ play g
+    run g             = return g
