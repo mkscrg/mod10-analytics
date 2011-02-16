@@ -1,5 +1,6 @@
 module Mechanics ( play
                  , newGame
+                 , GameState(..)
                  ) where
 
 

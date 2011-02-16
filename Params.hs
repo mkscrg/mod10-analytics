@@ -1,9 +1,8 @@
-module Pregame ( getParams
-               , RunParams(..)
-               ) where
+module Params ( getParams
+              , RunParams(..)
+              ) where
 
 
-import Data.Maybe ( fromMaybe )
 import System ( getArgs
               , exitWith
               , ExitCode(..) )
@@ -27,28 +26,28 @@ getParams = do
     case getOpt Permute options argv of
       (_, _, errs)  | not (null errs)          -> die errs
       (flags, _, _) | Help `elem` flags        -> help
-      (flags, _, _) | Interactive `elem` flags ->
-          return $ RunParams { ngames = 1
-                             , outh = stdout
-                             , quiet = False }
-      (flags, fname:_, _)                      -> validate flags fname
-      (_, [], _)                               -> die ["out_fname not given\n"]
+      (flags, _, _)                            -> validate flags
 
 
-validate :: [Flag] -> FilePath -> IO RunParams
-validate flags fname = do
-    h <- catch (openFile fname WriteMode) $
-               \err -> die [ioeGetErrorString err ++ "\n"]
+validate :: [Flag] -> IO RunParams
+validate flags = do
     let q = if Quiet `elem` flags
               then True
               else False
-    return $ RunParams { ngames = fromMaybe 1 $ nDef flags
-                       , outh = h
+    o <- oDef flags
+    return $ RunParams { ngames = nDef flags
+                       , outh = o
                        , quiet = q }
   where
-    nDef []     = Nothing
+    oDef []     = return stdout
+    oDef (x:xs) = case x of
+                    OutFile fname -> catch (openFile fname WriteMode) $
+                                     \err -> die
+                                         [ioeGetErrorString err ++ "\n"]
+                    _             -> oDef xs
+    nDef []     = 1
     nDef (x:xs) = case x of
-                    NGames i -> Just i
+                    NGames i -> i
                     _        -> nDef xs
 
 
@@ -69,28 +68,28 @@ dump = hPutStrLn stderr
 
 
 header :: String
-header = "Mod10 [-h/--help] [-i] [-n/--ngames N] out_fname"
+header = "Mod10 [-h/--help] [-o/--outfile fname] [-n/--ngames N] [-q/--quiet]"
 
 
 options :: [OptDescr Flag]
 options = [ Option ['h'] ["help"] (NoArg Help)
                    "Prints this help message"
-          , Option ['i'] ["interactive"] (NoArg Interactive)
-                   $ "Watch a game with prompts between turns\n" ++
-                     "  (-n, -q, and out_fname are ignored)"
+          , Option ['o'] ["outfile"] (ReqArg (\s -> OutFile s) "fname")
+                   "Specify where output is written (default stdout)"
           , Option ['n'] ["ngames"] (ReqArg (\s -> NGames (read s)) "N")
                    "Specify how many games are played (default 1)"
           , Option ['q'] ["quiet"] (NoArg Quiet)
-                   "Prints only Win/Loss/Timeout, not game rounds" ]
+                   "Prints only results, not full game rounds" ]
 
 
 data RunParams = RunParams { ngames :: Int
                            , outh :: Handle
-                           , quiet :: Bool }
+                           , quiet :: Bool
+                           } deriving (Show)
 
 
 data Flag = Help
-          | Interactive
+          | OutFile FilePath
           | NGames Int
           | Quiet
             deriving (Eq)
