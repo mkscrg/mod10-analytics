@@ -1,3 +1,5 @@
+NOTE: Last set has timeout=5000, rest have timeout=1500
+
 # games played: 10000
 winning:
       (n,frac): (202,2.02e-2)
@@ -33,4 +35,16 @@ losing:
   (mean,stDev): (137.4782091546943,73.5399423133957)
 timeout:
       (n,frac): (3875,3.875e-3)
+
+# games played: 40000000
+winning:
+      (n,frac): (932032,2.33008e-2)
+     (min,max): (7,1939)
+  (mean,stDev): (321.8357813894802,174.27604783675378)
+losing:
+      (n,frac): (38915507,0.972887675)
+     (min,max): (37,1990)
+  (mean,stDev): (27.143882822855165,153.58713515309682)
+timeout:
+      (n,frac): (152461,3.811525e-3)
 
