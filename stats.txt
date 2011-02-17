@@ -1,27 +1,36 @@
-games played: 10000
-win frequency: 2.02%
-winning mean count: 301.05940594059405
-winning std. dev. count: 167.9594728292458
-loss frequency: 97.63%
-losing mean count: 136.67786541022227
-losing std. dev. count: 72.75933552638017
-timeout frequency: 0.35000000000000003%
+# games played: 10000
+winning:
+      (n,frac): (202,2.02e-2)
+     (min,max): (37,1072)
+  (mean,stDev): (301.05940594059405,167.95947282924587)
+losing:
+      (n,frac): (9763,0.9763)
+     (min,max): (40,1063)
+  (mean,stDev): (136.67786541022227,72.75933552637782)
+timeout:
+      (n,frac): (35,3.5e-3)
 
-games played: 10000
-win frequency: 2.2800000000000002%
-winning mean count: 331.4868421052632
-winning std. dev. count: 162.38537075943697
-loss frequency: 97.35000000000001%
-losing mean count: 137.81479198767335
-losing std. dev. count: 72.59487254498542
-timeout frequency: 0.37%
+# games played: 10000
+winning:
+      (n,frac): (228,2.28e-2)
+     (min,max): (55,829)
+  (mean,stDev): (331.4868421052632,162.38537075943697)
+losing:
+      (n,frac): (9735,0.9735)
+     (min,max): (40,856)
+  (mean,stDev): (137.81479198767335,72.5948725449853)
+timeout:
+      (n,frac): (37,3.7e-3)
 
-games played: 10000
-win frequency: 2.1399999999999997%
-winning mean count: 327.5373831775701
-winning std. dev. count: 176.0078316777394
-loss frequency: 97.48%
-losing mean count: 137.6114074681986
-losing std. dev. count: 72.40224126372986
-timeout frequency: 0.38%
+# games played: 1000000
+winning:
+      (n,frac): (23400,2.34e-2)
+     (min,max): (10,1405)
+  (mean,stDev): (322.49051282051283,174.99004457757792)
+losing:
+      (n,frac): (972725,0.972725)
+     (min,max): (37,1477)
+  (mean,stDev): (137.4782091546943,73.5399423133957)
+timeout:
+      (n,frac): (3875,3.875e-3)
 
