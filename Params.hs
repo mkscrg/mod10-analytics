@@ -31,13 +31,13 @@ getParams = do
 
 validate :: [Flag] -> IO RunParams
 validate flags = do
-    let q = if Quiet `elem` flags
+    let v = if Verbose `elem` flags
               then True
               else False
     o <- oDef flags
     return $ RunParams { nGames = nDef flags
                        , outH = o
-                       , quiet = q }
+                       , verbose = v }
   where
     oDef []     = return stdout
     oDef (x:xs) = case x of
@@ -68,7 +68,8 @@ dump = hPutStrLn stderr
 
 
 header :: String
-header = "Mod10 [-h/--help] [-o/--outfile fname] [-n/--ngames N] [-q/--quiet]"
+header = "Mod10 [-h/--help] [-o/--outfile fname] [-n/--ngames N] " ++ 
+               "[-v/--verbose]"
 
 
 options :: [OptDescr Flag]
@@ -78,19 +79,19 @@ options = [ Option ['h'] ["help"] (NoArg Help)
                    "Specify where output is written (default stdout)"
           , Option ['n'] ["ngames"] (ReqArg (\s -> NGames (read s)) "N")
                    "Specify how many games are played (default 1)"
-          , Option ['q'] ["quiet"] (NoArg Quiet)
-                   "Prints only results, not full game rounds" ]
+          , Option ['v'] ["verbose"] (NoArg Verbose)
+                   "Prints full game rounds" ]
 
 
 data RunParams = RunParams { nGames :: Int
                            , outH :: Handle
-                           , quiet :: Bool
+                           , verbose :: Bool
                            } deriving (Show)
 
 
 data Flag = Help
           | OutFile FilePath
           | NGames Int
-          | Quiet
+          | Verbose
             deriving (Eq)
 

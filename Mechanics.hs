@@ -12,11 +12,11 @@ import Card
 
 
 play :: GameState -> GameState
-play InPlay {deck=d}    | null d            = Loss
-play InPlay {stacks=ss} | and $ map null ss = Win
-play InPlay {ctr=n}     | n > 1500          = Timeout
-play g@(InPlay {})                          = feedNext $ pickUp g
-play g                                      = g
+play InPlay {deck=d, ctr=n}    | null d            = Loss n
+play InPlay {stacks=ss, ctr=n} | and $ map null ss = Win n
+play InPlay {ctr=n}            | n >= 1500          = Timeout
+play g@(InPlay {})                                 = feedNext $ pickUp g
+play g                                             = g
 
 
 newGame :: (RandomGen g) => g -> GameState
@@ -98,8 +98,8 @@ feedAll src dst = feeder padSrc dst
     lend = length dst
 
 
-data GameState = Win
-               | Loss
+data GameState = Win Int
+               | Loss Int
                | Timeout
                | InPlay { deck :: [Card]
                         , stacks :: [[Card]]
@@ -107,9 +107,9 @@ data GameState = Win
                         , ctr :: Int }
 
 instance Show GameState where
-    show Win     = "Win"
-    show Loss    = "Loss"
-    show Timeout = "Timeout"
+    show (Win i)  = "Win " ++ show i
+    show (Loss i) = "Loss " ++ show i
+    show Timeout  = "Timeout"
     show InPlay {deck=d, stacks=ss, csi=i, ctr=n} =
         concat $ intersperse "\n" $
             [" n: " ++ show n, " d: " ++ stackToStr d] ++

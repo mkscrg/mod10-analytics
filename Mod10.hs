@@ -19,17 +19,17 @@ main = do
 
 playGame :: RunParams -> IO ()
 playGame RunParams {nGames=n} | n == 0              = return ()
-playGame rp@(RunParams {nGames=n, outH=h, quiet=q}) = do
+playGame rp@(RunParams {nGames=n, outH=h,verbose=v}) = do
     seed <- newStdGen
     let g = newGame seed
     g' <- run g
     hPrint h g'
-    if not q
+    if v
       then hPutStr h "\n\n"
       else return ()
     playGame rp { nGames = n - 1 }
   where
-    run g@(InPlay {}) = do if not q
+    run g@(InPlay {}) = do if v
                              then do hPrint h g
                                      hPutStr h "\n"
                              else return ()

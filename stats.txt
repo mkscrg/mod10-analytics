@@ -1,0 +1,27 @@
+games played: 10000
+win frequency: 2.02%
+winning mean count: 301.05940594059405
+winning std. dev. count: 167.9594728292458
+loss frequency: 97.63%
+losing mean count: 136.67786541022227
+losing std. dev. count: 72.75933552638017
+timeout frequency: 0.35000000000000003%
+
+games played: 10000
+win frequency: 2.2800000000000002%
+winning mean count: 331.4868421052632
+winning std. dev. count: 162.38537075943697
+loss frequency: 97.35000000000001%
+losing mean count: 137.81479198767335
+losing std. dev. count: 72.59487254498542
+timeout frequency: 0.37%
+
+games played: 10000
+win frequency: 2.1399999999999997%
+winning mean count: 327.5373831775701
+winning std. dev. count: 176.0078316777394
+loss frequency: 97.48%
+losing mean count: 137.6114074681986
+losing std. dev. count: 72.40224126372986
+timeout frequency: 0.38%
+
