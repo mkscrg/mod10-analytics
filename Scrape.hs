@@ -58,23 +58,13 @@ getRawStats raw = foldl' collect blankRawStats $ filter isEndGame $ lines raw
                            , lossHist = let lH' = incHist i $ lossHist stats
                                         in lH' `deepseq` lH' }
           Timeout -> stats { timeoutN = timeoutN stats + 1 }
-    blankRawStats = RawStats { winN = 0
-                             , winMin = 1500
-                             , winMax = 0
-                             , winSumX = 0
-                             , winSumXX = 0
-                             , winHist = take 2001 $ repeat 0
-                             , lossN = 0
-                             , lossMin = 1500
-                             , lossMax = 0
-                             , lossSumX = 0
-                             , lossSumXX = 0
-                             , lossHist = take 2001 $ repeat 0
-                             , timeoutN = 0 }
     isEndGame str = or $ map (== head str) "WLT"
     sqr i = fromIntegral $ i^(2::Int)
-    incHist i xs = let (a, b) = splitAt i xs
-                   in a ++ (head b + 1) : tail b
+    incHist i xs = let i' = (i - 7) `div` 3
+                   in if i' < length xs
+                        then let (a, b) = splitAt i' xs
+                             in a ++ (head b + 1) : (tail b)
+                        else xs
 
 
 nFrac :: Int -> Int -> (Int, Double)
@@ -93,6 +83,25 @@ meanSD n sumX sumXX =
     n' = fromIntegral n
 
 
+blankRawStats :: RawStats
+blankRawStats = RawStats { winN = 0
+                         , winMin = tOCount
+                         , winMax = 0
+                         , winSumX = 0
+                         , winSumXX = 0
+                         , winHist = take hLen $ repeat 0
+                         , lossN = 0
+                         , lossMin = tOCount
+                         , lossMax = 0
+                         , lossSumX = 0
+                         , lossSumXX = 0
+                         , lossHist = take hLen $ repeat 0
+                         , timeoutN = 0 }
+  where
+    hLen = (tOCount - 7) `div` 3 + 1
+    tOCount = 2000
+
+
 data CleanStats = CleanStats { count :: Int
                              , winNFrac :: (Int, Double)
                              , winMinMax :: (Int, Int)
@@ -105,15 +114,15 @@ data CleanStats = CleanStats { count :: Int
 instance Show CleanStats where
     show sts = concat $ intersperse "\n"
         [ "  games played: " ++ show (count sts)
-        , "winning "
+        , "winning"
         , "      (n,frac): " ++ show (winNFrac sts)
         , "     (min,max): " ++ show (winMinMax sts)
         , "  (mean,stDev): " ++ show (winMeanSD sts)
-        , "losing "
+        , "losing"
         , "      (n,frac): " ++ show (lossNFrac sts)
         , "     (min,max): " ++ show (lossMinMax sts)
         , "  (mean,stDev): " ++ show (lossMeanSD sts)
-        , "timeout "
+        , "timeout"
         , "      (n,frac): " ++ show (timeoutNFrac sts) ]
 
 
