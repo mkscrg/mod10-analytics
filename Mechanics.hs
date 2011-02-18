@@ -14,7 +14,7 @@ import Card
 play :: GameState -> GameState
 play InPlay {deck=d, ctr=n}    | null d            = Loss n
 play InPlay {stacks=ss, ctr=n} | and $ map null ss = Win n
-play InPlay {ctr=n}            | n >= 5000          = Timeout
+play InPlay {ctr=n}            | n >= 2000          = Timeout
 play g@(InPlay {})                                 = feedNext $ pickUp g
 play g                                             = g
 
