@@ -47,7 +47,7 @@ makePlot run = Plot.plot term $ MultiPlot.simpleFromPartArray $
              Opts.remove Opt.key Opts.deflt
     term = PNG.fontLarge $
            PNG.cons fname
-    figtitle = "# of Rounds Winning and Losing Games (" ++
+    figtitle = "# of Rounds in Winning and Losing Games (" ++
                last (words (run !! 1)) ++ ")"
     fname = plotFilename $ head run
     hists = map (\lab -> getHist $ head $ mapMaybe (stripPrefix lab) run)
