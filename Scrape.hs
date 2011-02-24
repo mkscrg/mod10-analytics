@@ -3,7 +3,7 @@ module Main ( main ) where
 
 import Control.DeepSeq ( deepseq )
 import Data.Foldable ( foldl' )
-import Data.List ( intersperse )
+import Data.List ( findIndex, intersperse )
 import System ( getArgs )
 
 
@@ -15,8 +15,8 @@ main = do
     let stats = getRawStats raw
     putStrLn fname
     putStrLn $ show $ getCleanStats stats
-    putStrLn $ " win histogram: " ++ (show (winHist stats))
-    putStrLn $ "loss histogram: " ++ (show (lossHist stats))
+    putStrLn $ "    win freq.s: " ++ (show (winFreqs stats))
+    putStrLn $ "   loss freq.s: " ++ (show (lossFreqs stats))
     putStrLn ""
 
 
@@ -48,23 +48,25 @@ getRawStats raw = foldl' collect blankRawStats $ filter isEndGame $ lines raw
                            , winMax = max i $ winMax stats
                            , winSumX = winSumX stats + fromIntegral i
                            , winSumXX = winSumXX stats + sqr i
-                           , winHist = let lH' = incHist i $ winHist stats
-                                       in lH' `deepseq` lH' }
+                           , winFreqs = let wFs = incFreqs i $ winFreqs stats
+                                        in wFs `deepseq` wFs }
           Loss i  -> stats { lossN = lossN stats + 1
                            , lossMin = min i $ lossMin stats
                            , lossMax = max i $ lossMax stats
                            , lossSumX = lossSumX stats + fromIntegral i
                            , lossSumXX = lossSumXX stats + sqr i
-                           , lossHist = let lH' = incHist i $ lossHist stats
-                                        in lH' `deepseq` lH' }
+                           , lossFreqs = let lFs = incFreqs i $ lossFreqs stats
+                                         in lFs `deepseq` lFs }
           Timeout -> stats { timeoutN = timeoutN stats + 1 }
     isEndGame str = or $ map (== head str) "WLT"
     sqr i = fromIntegral $ i^(2::Int)
-    incHist i xs = let i' = (i - 7) `div` 3
-                   in if i' < length xs
-                        then let (a, b) = splitAt i' xs
-                             in a ++ (head b + 1) : (tail b)
-                        else xs
+    incFreqs i xs = let mi = findIndex (\(i', _) -> i' == i) xs
+                    in case mi of
+                         Just hi -> let (a, b) = splitAt hi xs
+                                    in a ++
+                                       (\(i', c) -> (i', c + 1)) (head b) :
+                                       tail b
+                         Nothing -> xs
 
 
 nFrac :: Int -> Int -> (Int, Double)
@@ -89,16 +91,18 @@ blankRawStats = RawStats { winN = 0
                          , winMax = 0
                          , winSumX = 0
                          , winSumXX = 0
-                         , winHist = take hLen $ repeat 0
+                         , winFreqs = wFs
                          , lossN = 0
                          , lossMin = tOCount
                          , lossMax = 0
                          , lossSumX = 0
                          , lossSumXX = 0
-                         , lossHist = take hLen $ repeat 0
+                         , lossFreqs = lFs
                          , timeoutN = 0 }
   where
-    hLen = (tOCount - 7) `div` 3 + 1
+    wFs = zip [7,10..tOCount] zeros
+    lFs = zip [38..tOCount] zeros
+    zeros = repeat 0
     tOCount = 2000
 
 
@@ -131,13 +135,13 @@ data RawStats = RawStats { winN :: !Int
                          , winMax :: !Int
                          , winSumX :: !Integer
                          , winSumXX :: !Integer
-                         , winHist :: ![Int]
+                         , winFreqs :: [(Int,Int)]
                          , lossN :: !Int
                          , lossMin :: !Int
                          , lossMax :: !Int
                          , lossSumX :: !Integer
                          , lossSumXX :: !Integer
-                         , lossHist :: ![Int]
+                         , lossFreqs :: [(Int,Int)]
                          , timeoutN :: !Int
                          } deriving (Show)
 
