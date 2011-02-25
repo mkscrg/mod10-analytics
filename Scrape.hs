@@ -58,8 +58,9 @@ getRawStats raw = foldl' collect blankRawStats $ filter isEndGame $ lines raw
                            , lossFreqs = let lFs = incFreqs i $ lossFreqs stats
                                          in lFs `deepseq` lFs }
           Timeout -> stats { timeoutN = timeoutN stats + 1 }
-    isEndGame str = or $ map (== head str) "WLT"
     sqr i = fromIntegral $ i^(2::Int)
+    isEndGame str | not $ null str = or $ map (== head str) "WLT"
+    isEndGame _                    = False
     incFreqs i xs = let mi = findIndex (\(i', _) -> i' == i) xs
                     in case mi of
                          Just hi -> let (a, b) = splitAt hi xs
@@ -135,13 +136,13 @@ data RawStats = RawStats { winN :: !Int
                          , winMax :: !Int
                          , winSumX :: !Integer
                          , winSumXX :: !Integer
-                         , winFreqs :: [(Int,Int)]
+                         , winFreqs :: ![(Int,Int)]
                          , lossN :: !Int
                          , lossMin :: !Int
                          , lossMax :: !Int
                          , lossSumX :: !Integer
                          , lossSumXX :: !Integer
-                         , lossFreqs :: [(Int,Int)]
+                         , lossFreqs :: ![(Int,Int)]
                          , timeoutN :: !Int
                          } deriving (Show)
 

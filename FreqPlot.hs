@@ -1,4 +1,4 @@
-module Main ( main ) where
+module Main where
 
 
 import Data.Array ( listArray )
@@ -52,12 +52,11 @@ makePlot run = Plot.plot term $ MultiPlot.simpleFromPartArray $
     fname = plotFilename $ head run
     freqs = map (\lab -> getFreqs $ head $ mapMaybe (stripPrefix lab) run)
                 dataLabels
-    dataLabels = [" win freq.s: ", "loss freq.s: "]
+    dataLabels = ["    win freq.s: ", "   loss freq.s: "]
 
 
 getFreqs :: String -> [(Int, Int)]
-getFreqs str = let counts = read str :: [Int]
-              in zip [7,10..] counts
+getFreqs = read
 
 
 chunks :: String -> [[String]]
