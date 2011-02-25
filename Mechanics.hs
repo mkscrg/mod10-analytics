@@ -19,7 +19,7 @@ play g@(InPlay {})                                 = feedNext $ pickUp g
 play g                                             = g
 
 
-newGame :: (RandomGen g) => g -> GameState
+newGame :: (RandomGen r) => r -> GameState
 newGame rgen = let (s, d) = splitAt 15 $ shuffle rgen newDeck
                in InPlay { deck = d
                          , stacks = feedAll s $ replicate 7 []
