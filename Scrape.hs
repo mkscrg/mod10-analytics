@@ -1,3 +1,6 @@
+-- | This module defines an executable called Scrape, which takes as input the
+-- output of Mod10 and prints a number of statistics regarding that output.
+-- These statistics may then be plotted by FreqPlot.
 module Main ( main ) where
 
 
@@ -7,6 +10,9 @@ import Data.List ( findIndex, intersperse )
 import System ( getArgs )
 
 
+-- | The first command-line argument is taken as the input filename. Raw
+-- statistics data are accumulated over that file and then curated and printed.
+-- Frequency data for wins and losses, described below, is also printed.
 main :: IO ()
 main = do
     argv <- getArgs
@@ -20,6 +26,7 @@ main = do
     putStrLn ""
 
 
+-- | Curate RawStats into CleanStats
 getCleanStats :: RawStats -> CleanStats
 getCleanStats stats =
     CleanStats { count = n
@@ -38,9 +45,13 @@ getCleanStats stats =
     n = winN stats + lossN stats + timeoutN stats
 
 
+-- | Accumulate RawStats from the given input String. This function uses a
+-- strict left fold, DeepSeq, and the strictness annotations on RawStats to
+-- ensure no memory leakage while accumulating over lots of input.
 getRawStats :: String -> RawStats
 getRawStats raw = foldl' collect blankRawStats $ filter isEndGame $ lines raw
   where
+    -- Read a GameEnd from an endgame-defining line and update the RawStats
     collect stats str =
         case read str of
           Win i   -> stats { winN = winN stats + 1
@@ -59,8 +70,10 @@ getRawStats raw = foldl' collect blankRawStats $ filter isEndGame $ lines raw
                                          in lFs `deepseq` lFs }
           Timeout -> stats { timeoutN = timeoutN stats + 1 }
     sqr i = fromIntegral $ i^(2::Int)
+    -- Determine whether a line of input defines an endgame
     isEndGame str | not $ null str = or $ map (== head str) "WLT"
     isEndGame _                    = False
+    -- Increment an entry in a frequency list, given the # of turns
     incFreqs i xs = let mi = findIndex (\(i', _) -> i' == i) xs
                     in case mi of
                          Just hi -> let (a, b) = splitAt hi xs
@@ -70,13 +83,18 @@ getRawStats raw = foldl' collect blankRawStats $ filter isEndGame $ lines raw
                          Nothing -> xs
 
 
-nFrac :: Int -> Int -> (Int, Double)
-nFrac m n = (m', m'' / fromIntegral n)
-  where
-    m' = fromIntegral m
-    m'' = fromIntegral m
+-- | Compute the fraction of two numbers, and return with the numerator
+nFrac :: Int            -- ^ Numerator
+      -> Int            -- ^ Denominator
+      -> (Int, Double)  -- ^ Computed (num, num/denom)
+nFrac m n = (m, fromIntegral m / fromIntegral n)
 
-meanSD :: Int -> Integer -> Integer -> (Double, Double)
+
+-- | Compute the mean and standard deviation from accumulated values.
+meanSD :: Int               -- ^ Number of games being
+       -> Integer           -- ^ Sum of # of turns in games
+       -> Integer           -- ^ Sum of squares of # of turns in games
+       -> (Double, Double)  -- ^ Computed (mean, standard deviation)
 meanSD n sumX sumXX =
     (xBar, ((n' * xBar**2 - 2 * xBar * sumX' + sumXX') / (n' - 1))**0.5)
   where
@@ -86,6 +104,7 @@ meanSD n sumX sumXX =
     n' = fromIntegral n
 
 
+-- | An initialized RawStats, as a base for accumulation from input.
 blankRawStats :: RawStats
 blankRawStats = RawStats { winN = 0
                          , winMin = tOCount
@@ -102,20 +121,31 @@ blankRawStats = RawStats { winN = 0
                          , timeoutN = 0 }
   where
     wFs = zip [7,10..tOCount] zeros
-    lFs = zip [38..tOCount] zeros
+    lFs = zip [37,40..tOCount] zeros
     zeros = repeat 0
     tOCount = 2000
 
+-- | Curated statistics, processed from raw statistics
+data CleanStats =
+    CleanStats { count :: Int
+               -- ^ Number of games played
+               , winNFrac :: (Int, Double)
+               -- ^ Number and fraction of wins
+               , winMinMax :: (Int, Int)
+               -- ^ Least and greatest # of turns in wins
+               , winMeanSD :: (Double, Double)
+               -- ^ Mean and standard deviation of # of turns in wins
+               , lossNFrac :: (Int, Double)
+               -- ^ Number and fraction of wins
+               , lossMinMax :: (Int, Int)
+               -- ^ Least and greatest # of turns in wins
+               , lossMeanSD :: (Double, Double)
+               -- ^ Mean and standard deviation of # of turns in wins
+               , timeoutNFrac :: (Int, Double)
+               -- ^ Number and fraction of wins
+               }
 
-data CleanStats = CleanStats { count :: Int
-                             , winNFrac :: (Int, Double)
-                             , winMinMax :: (Int, Int)
-                             , winMeanSD :: (Double, Double)
-                             , lossNFrac :: (Int, Double)
-                             , lossMinMax :: (Int, Int)
-                             , lossMeanSD :: (Double, Double)
-                             , timeoutNFrac :: (Int, Double) }
-
+-- | Produce a String representation of the curated statistics
 instance Show CleanStats where
     show sts = concat $ intersperse "\n"
         [ "  games played: " ++ show (count sts)
@@ -131,22 +161,39 @@ instance Show CleanStats where
         , "      (n,frac): " ++ show (timeoutNFrac sts) ]
 
 
-data RawStats = RawStats { winN :: !Int
-                         , winMin :: !Int
-                         , winMax :: !Int
-                         , winSumX :: !Integer
-                         , winSumXX :: !Integer
-                         , winFreqs :: ![(Int,Int)]
-                         , lossN :: !Int
-                         , lossMin :: !Int
-                         , lossMax :: !Int
-                         , lossSumX :: !Integer
-                         , lossSumXX :: !Integer
-                         , lossFreqs :: ![(Int,Int)]
-                         , timeoutN :: !Int
-                         } deriving (Show)
+-- | Raw statistics accumulated from the input, with strict record types to
+-- prevent memory leakage when accumulating over lots of input.
+data RawStats =
+      RawStats { winN :: !Int
+               -- ^ Number of wins
+               , winMin :: !Int
+               -- ^ Smallest # of turns in a winning game
+               , winMax :: !Int
+               -- ^ Greatest # of turns in a winning game
+               , winSumX :: !Integer
+               -- ^ Sum of # of turns in winning games
+               , winSumXX :: !Integer
+               -- ^ Sum of squares of # of turns in winning games
+               , winFreqs :: ![(Int,Int)]
+               -- ^ List of (# of turns, # of wins) pairs
+               , lossN :: !Int
+               -- ^ Number of losses
+               , lossMin :: !Int
+               -- ^ Smallest # of turns in a losing game
+               , lossMax :: !Int
+               -- ^ Greatest # of turns in a losing game
+               , lossSumX :: !Integer
+               -- ^ Sum of # of turns in losing games
+               , lossSumXX :: !Integer
+               -- ^ Sum of squares of # of turns in losing games
+               , lossFreqs :: ![(Int,Int)]
+               -- ^ List of (# of turns, # of losses) pairs
+               , timeoutN :: !Int
+               -- ^ Number of timeouts
+               } deriving (Show)
 
 
+-- | Allows for the reading of ending GameStates from input.
 data GameEnds = Win Int
               | Loss Int
               | Timeout

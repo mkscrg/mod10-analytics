@@ -1,16 +1,17 @@
-module Mechanics ( play
-                 , newGame
+-- | The Mechanics module defines the game logic of Mod10, from detection of
+-- valid triplets to playing whole turns.
+module Mechanics ( play, newGame
                  , GameState(..)
                  ) where
 
 
-import Data.List ( elemIndex
-                 , intersperse )
+import Data.List ( elemIndex, intersperse )
 import System.Random ( RandomGen )
 
 import Card
 
 
+-- | Play a single turn of the game, first checking for win/loss/timeout.
 play :: GameState -> GameState
 play InPlay {deck=d, ctr=n}    | null d            = Loss n
 play InPlay {stacks=ss, ctr=n} | and $ map null ss = Win n
@@ -19,14 +20,18 @@ play g@(InPlay {})                                 = feedNext $ pickUp g
 play g                                             = g
 
 
+-- | Produce a ready-to-play GameState from a shuffled deck.
 newGame :: (RandomGen r) => r -> GameState
-newGame rgen = let (s, d) = splitAt 15 $ shuffle rgen newDeck
+newGame rgen = let (s, d) = splitAt (nStacks * 2 + 1) $ shuffle rgen newDeck
                in InPlay { deck = d
-                         , stacks = feedAll s $ replicate 7 []
+                         , stacks = feedAll s $ replicate nStacks []
                          , csi = 0
                          , ctr = 0 }
+  where
+    nStacks = 7
 
 
+-- | Pick up all valid triplets in the current stack.
 pickUp :: GameState -> GameState
 pickUp g@(InPlay {deck=d, stacks=ss, csi=i}) =
     case findTriplet s of
@@ -44,6 +49,9 @@ pickUp g@(InPlay {deck=d, stacks=ss, csi=i}) =
 pickUp g = g
 
 
+-- | Deal the top of the deck to the top of the current stack, and increment
+-- the turn counter. If no stacks are left (a winning game), just increment the
+-- turn counter.
 feedNext :: GameState -> GameState
 feedNext g@(InPlay {deck=d, stacks=ss, csi=i}) =
     case nextI of
@@ -54,6 +62,8 @@ feedNext g@(InPlay {deck=d, stacks=ss, csi=i}) =
                    , csi = i'
                    , ctr = ctr g + 1 }
   where
+    -- Find the first nonempty stack after the current stack. Use Maybe to
+    -- alert cases in which there are no nonempty stacks.
     nextI = let mayI = elemIndex True $ drop (i + 1) $
                        concat $ replicate 2 $ map (not . null) ss
             in case mayI of
@@ -62,7 +72,7 @@ feedNext g@(InPlay {deck=d, stacks=ss, csi=i}) =
 feedNext g = g
 
 
--- Move cards, designated by a Triplet, from src to the end of dst.
+-- | Move cards, designated by a Triplet, from src to the end of dst.
 moveTriplet :: Triplet -> [a] -> [a] -> ([a], [a])
 moveTriplet Top    src dst = let (a, b) = splitAt (length src - 2) src
                              in (tail a, dst ++ head a : b)
@@ -72,7 +82,7 @@ moveTriplet Bottom src dst = let (a, b) = splitAt 3 src
                              in (b, dst ++ a)
 
 
--- Check a stack for a valid triplet. in the case of multiple valid triplets,
+-- | Check a stack for a valid triplet. in the case of multiple valid triplets,
 -- order of precedence is Top, Middle, then Bottom.
 -- (This is not necessarily optimal strategy!)
 findTriplet :: (HasValue a) => [a] -> Maybe Triplet
@@ -90,7 +100,7 @@ findTriplet cs | len >= 3 =
 findTriplet _ = Nothing
 
 
--- "Deal" the elements of src into the lists of dst, by zipWith'ing dst with
+-- | "Deal" the elements of src into the lists of dst, by zipWith'ing dst with
 -- dst-length pieces of src, by list construction.
 feedAll :: [a] -> [[a]] -> [[a]]
 feedAll src dst = feeder padSrc dst
@@ -104,14 +114,17 @@ feedAll src dst = feeder padSrc dst
     lend = length dst
 
 
-data GameState = Win Int
-               | Loss Int
-               | Timeout
-               | InPlay { deck :: [Card]
-                        , stacks :: [[Card]]
-                        , csi :: Int
-                        , ctr :: Int }
+data GameState =
+    Win Int   -- ^ A won game, with the number of turns played
+  | Loss Int  -- ^ A lost game, with the number of turns played
+  | Timeout   -- ^ A game that's exceeded the time-out limit
+  | InPlay { deck :: [Card]      -- ^ The deck from which cards are dealt
+           , stacks :: [[Card]]  -- ^ The stacks to which cards are dealt
+           , csi :: Int          -- ^ The (0-based) index of the current stack
+           , ctr :: Int }        -- ^ The number of turns played
 
+-- | Produce a human-readable String representation of all aspects of a
+-- GameState.
 instance Show GameState where
     show (Win i)  = "Win " ++ show i
     show (Loss i) = "Loss " ++ show i
@@ -122,8 +135,8 @@ instance Show GameState where
             zipWith (++) (map label [0..(length ss - 1)])
                          (map stackToStr ss)
       where
-        -- Stacks (and deck) are printed in reverse, so that the "top" card
-        -- is to the right of the screen.
+        -- Print stacks (and deck) in reverse, so that the "top" card is to the
+        -- right of the screen.
         stackToStr s = concat $ intersperse " " $ map show (reverse s)
         -- Mark the current stack with *.
         label j = (if j == i
@@ -131,7 +144,7 @@ instance Show GameState where
                      else ' ') : show j ++ ": "
 
 
-data Triplet = Top              -- top 2 cards, bottom card
-             | Middle           -- top card, bottom 2 cards
-             | Bottom           -- bottom 3 cards
+data Triplet = Top              -- ^ The top 2 cards and the bottom card
+             | Middle           -- ^ The top card and the bottom 2 cards
+             | Bottom           -- ^ The bottom 3 cards
                deriving (Show)

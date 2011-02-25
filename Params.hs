@@ -1,25 +1,21 @@
+-- | The Params module uses the System.Console.GetOpt library to parse
+-- command-line arguments for Mod10.
 module Params ( getParams
               , RunParams(..)
               ) where
 
 
-import System ( getArgs
-              , exitWith
+import System ( getArgs, exitWith
               , ExitCode(..) )
-import System.Console.GetOpt ( getOpt
-                             , usageInfo
-                             , ArgDescr(..)
-                             , ArgOrder(..)
-                             , OptDescr(..) )
-import System.IO ( hPutStrLn
-                 , openFile
-                 , stderr
-                 , stdout
-                 , Handle
-                 , IOMode(..) )
+import System.Console.GetOpt ( getOpt, usageInfo
+                             , ArgDescr(..), ArgOrder(..), OptDescr(..) )
+import System.IO ( hPutStrLn, openFile, stderr, stdout
+                 , Handle, IOMode(..) )
 import System.IO.Error ( ioeGetErrorString )
 
 
+-- | Get the command-line arguments and validate them if reasonable. Print help
+-- info if requested, and exit with error if arguments were unreasonable.
 getParams :: IO RunParams
 getParams = do
     argv <- getArgs
@@ -29,6 +25,8 @@ getParams = do
       (flags, _, _)                            -> validate flags
 
 
+-- | Convert a reasonable set of Flags into a RunParams record, using default
+-- values where necessary. Exit with error if an invalid filename was given.
 validate :: [Flag] -> IO RunParams
 validate flags = do
     let v = if Verbose `elem` flags
@@ -51,27 +49,33 @@ validate flags = do
                     _        -> nDef xs
 
 
+-- | Exit with an error after printing the given string, and the usage info.
 die :: [String] -> IO b
 die errs = dump (concat errs ++ info) >> exitWith (ExitFailure 1)
 
 
+-- | Print the usage info and exit normally.
 help :: IO b
 help = dump info >> exitWith ExitSuccess
 
 
+-- | Usage info, generated from the header and the option definitions.
 info :: String
 info = usageInfo header options
 
 
+-- | Print to stderr.
 dump :: String -> IO ()
 dump = hPutStrLn stderr
 
 
+-- | Header string, showing the command syntax.
 header :: String
 header = "Mod10 [-h/--help] [-o/--outfile fname] [-n/--ngames N] " ++ 
                "[-v/--verbose]"
 
 
+-- | Options definition.
 options :: [OptDescr Flag]
 options = [ Option ['h'] ["help"] (NoArg Help)
                    "Prints this help message"
@@ -83,15 +87,16 @@ options = [ Option ['h'] ["help"] (NoArg Help)
                    "Prints full game rounds" ]
 
 
-data RunParams = RunParams { nGames :: Int
-                           , outH :: Handle
-                           , verbose :: Bool
-                           } deriving (Show)
+data RunParams =
+    RunParams { nGames :: Int    -- ^ Number of games unfinished
+              , outH :: Handle   -- ^ Handle of output location
+              , verbose :: Bool  -- ^ Whether to print GameState at each turn
+              } deriving (Show)
 
 
 data Flag = Help
-          | OutFile FilePath
-          | NGames Int
-          | Verbose
+          | OutFile FilePath  -- ^ User-spec'd output path
+          | NGames Int        -- ^ User-spec'd number of games
+          | Verbose           -- ^ User-spec'd verbosity
             deriving (Eq)
 

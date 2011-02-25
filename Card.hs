@@ -1,15 +1,16 @@
-module Card ( newDeck
-            , shuffle
-            , Card
-            , HasValue(..)
+-- | The Card module defines the basic data types for a card game, as well as a
+-- shuffling function for lists.
+module Card ( newDeck, shuffle
+            , Card, HasValue(..)
             ) where
 
 
 import Data.List ( sortBy )
-import System.Random ( RandomGen
-                     , randoms )
+import System.Random ( randoms
+                     , RandomGen )
 
 
+-- | An unsorted deck with all possible Cards
 newDeck :: [Card]
 newDeck = [ Card v s | v <- vs, s <- ss ]
   where
@@ -18,7 +19,7 @@ newDeck = [ Card v s | v <- vs, s <- ss ]
     ss = [Club, Diamond, Heart, Spade]
 
 
--- decorate with random ints, sort, undecorate
+-- | Decorate xs with random ints, sort the decorated pairs, then undecorate.
 shuffle :: RandomGen r => r -> [a] -> [a]
 shuffle rgen xs = map snd (sortBy (\(x, _) (y, _) -> compare x y) zlist)
   where
