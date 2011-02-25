@@ -62,6 +62,7 @@ feedNext g@(InPlay {deck=d, stacks=ss, csi=i}) =
 feedNext g = g
 
 
+-- Move cards, designated by a Triplet, from src to the end of dst.
 moveTriplet :: Triplet -> [a] -> [a] -> ([a], [a])
 moveTriplet Top    src dst = let (a, b) = splitAt (length src - 2) src
                              in (tail a, dst ++ head a : b)
@@ -71,6 +72,9 @@ moveTriplet Bottom src dst = let (a, b) = splitAt 3 src
                              in (b, dst ++ a)
 
 
+-- Check a stack for a valid triplet. in the case of multiple valid triplets,
+-- order of precedence is Top, Middle, then Bottom.
+-- (This is not necessarily optimal strategy!)
 findTriplet :: (HasValue a) => [a] -> Maybe Triplet
 findTriplet cs | len >= 3 =
     if valTrip $ head cs : drop (len - 2) cs
@@ -86,6 +90,8 @@ findTriplet cs | len >= 3 =
 findTriplet _ = Nothing
 
 
+-- "Deal" the elements of src into the lists of dst, by zipWith'ing dst with
+-- dst-length pieces of src, by list construction.
 feedAll :: [a] -> [[a]] -> [[a]]
 feedAll src dst = feeder padSrc dst
   where
@@ -116,13 +122,16 @@ instance Show GameState where
             zipWith (++) (map label [0..(length ss - 1)])
                          (map stackToStr ss)
       where
+        -- Stacks (and deck) are printed in reverse, so that the "top" card
+        -- is to the right of the screen.
         stackToStr s = concat $ intersperse " " $ map show (reverse s)
+        -- Mark the current stack with *.
         label j = (if j == i
                      then '*'
                      else ' ') : show j ++ ": "
 
 
-data Triplet = Top
-             | Middle
-             | Bottom
+data Triplet = Top              -- top 2 cards, bottom card
+             | Middle           -- top card, bottom 2 cards
+             | Bottom           -- bottom 3 cards
                deriving (Show)

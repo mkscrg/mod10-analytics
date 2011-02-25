@@ -18,10 +18,11 @@ newDeck = [ Card v s | v <- vs, s <- ss ]
     ss = [Club, Diamond, Heart, Spade]
 
 
+-- decorate with random ints, sort, undecorate
 shuffle :: RandomGen r => r -> [a] -> [a]
 shuffle rgen xs = map snd (sortBy (\(x, _) (y, _) -> compare x y) zlist)
   where
-    zlist = zip (take (length xs) (randoms rgen :: [Int])) xs
+    zlist = zip (randoms rgen :: [Int]) xs
 
 
 class HasValue a where
