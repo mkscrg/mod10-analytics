@@ -25,7 +25,7 @@ main = do
 -- | Generate a new game, play it round-by-round, and print the final
 -- GameState. Print the GameState in each round if the verbose parameter is on.
 -- Recurse and play another game if the number of games parameter is not 1.
-playGame :: RunParams -> IO ()as
+playGame :: RunParams -> IO ()
 playGame RunParams {nGames=n} | n == 0              = return ()
 playGame rp@(RunParams {nGames=n, outH=h,verbose=v}) = do
     seed <- newStdGen
