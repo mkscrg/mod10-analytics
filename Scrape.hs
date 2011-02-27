@@ -1,6 +1,9 @@
 -- | This module defines an executable called Scrape, which takes as input the
 -- output of Mod10 and prints a number of statistics regarding that output.
 -- These statistics may then be plotted by FreqPlot.
+-- TODO: This implementation is somewhat redundant. The RawStats record needn't
+-- include anything more than the winFreqs and lossFreqs members. All other
+-- information can be computer after accumulating those lists. Fix this!
 module Main ( main ) where
 
 
