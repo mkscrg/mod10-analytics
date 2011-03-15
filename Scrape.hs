@@ -55,8 +55,10 @@ getCleanStats stats =
     lossSums = sums $ losses stats
     sums :: [(Int, Int)] -> (Integer, Integer)
     sums freqs = foldr (\(x, x2) (s, s2) ->
-                        (fromIntegral x + s, fromIntegral x2 + s2)) (0, 0) $
-                       map (\(c, r) -> (c*r, c*r*r)) freqs
+                        (x + s, x2 + s2)) (0, 0) $
+                       map (\(c, r) ->
+                            let (c', r') = (fromIntegral c, fromIntegral r)
+                            in (c' * r', c' * c' * r')) freqs
 
 
 -- | Accumulate RawStats from the given input String. This function uses a
@@ -94,7 +96,7 @@ nFrac m n = (m, fromIntegral m / fromIntegral n)
 
 
 -- | Compute the mean and standard deviation from accumulated values.
-meanSD :: Int               -- ^ Number of games being
+meanSD :: Int               -- ^ Number of games
        -> Integer           -- ^ Sum of # of turns in games
        -> Integer           -- ^ Sum of squares of # of turns in games
        -> (Double, Double)  -- ^ Computed (mean, standard deviation)
