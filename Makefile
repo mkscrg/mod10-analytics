@@ -3,10 +3,10 @@
 HC = ghc
 HC_OPTS = --make -Wall -Werror
 
-simulate :
+simulate : simulate.hs Simulation/Params.hs Simulation/Mechanics.hs Simulation/Card.hs
 	$(HC) $(HC_OPTS) simulate.hs
 
-analyze :
+analyze : analyze.hs Analysis/Params.hs Analysis/Scrape.hs Analysis/Plots.hs
 	$(HC) $(HC_OPTS) analyze.hs
 
 clean :

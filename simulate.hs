@@ -63,4 +63,4 @@ playGame rp@(RunParams {filt=f, nGames=n, outH=h, verbose=v}) = do
                  then run $ play g
                  else return Timeout
     runFilter g = run g
-    threshold = 1
+    threshold = 2

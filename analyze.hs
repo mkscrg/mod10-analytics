@@ -118,11 +118,11 @@ instance Show CleanStats where
         [ "# games played: " ++ show (count stats)
         , "winning ..."
         , "  (# games, frac. of non-timeouts): " ++ show (winNFrac stats)
-        , "  (min # rounds, max # rounds): " ++ show (winMinMax stats)
-        , "  (mean # rounds, stDev # rounds): " ++ show (winMeanSD stats)
+        , "      (min # rounds, max # rounds): " ++ show (winMinMax stats)
+        , "   (mean # rounds, stDev # rounds): " ++ show (winMeanSD stats)
         , "losing ..."
         , "  (# games, frac. of non-timeouts): " ++ show (lossNFrac stats)
-        , "  (min # rounds, max # rounds): " ++ show (lossMinMax stats)
-        , "  (mean # rounds, stDev # rounds): " ++ show (lossMeanSD stats)
+        , "      (min # rounds, max # rounds): " ++ show (lossMinMax stats)
+        , "   (mean # rounds, stDev # rounds): " ++ show (lossMeanSD stats)
         , "timeout ..."
-        , "  (# games, frac. of total): " ++ show (timeoutNFrac stats) ]
+        , "         (# games, frac. of total): " ++ show (timeoutNFrac stats) ]
