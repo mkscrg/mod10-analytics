@@ -9,7 +9,8 @@ module Main ( main ) where
 
 import Control.DeepSeq ( deepseq )
 import Data.Foldable ( foldl' )
-import Data.List ( findIndex, intersperse )
+import Data.List ( find, findIndex, intersperse )
+import Data.Maybe ( fromJust )
 import System ( getArgs )
 
 
@@ -24,8 +25,8 @@ main = do
     let stats = getRawStats raw
     putStrLn fname
     putStrLn $ show $ getCleanStats stats
-    putStrLn $ "    win freq.s: " ++ (show (winFreqs stats))
-    putStrLn $ "   loss freq.s: " ++ (show (lossFreqs stats))
+    putStrLn $ "    win freq.s: " ++ (show $ wins stats)
+    putStrLn $ "   loss freq.s: " ++ (show $ losses stats)
     putStrLn ""
 
 
@@ -38,14 +39,13 @@ getCleanStats stats =
                                                      wins stats
                              , fst $ fromJust $ find ((/= 0) . snd) $
                                                      reverse $ wins stats )
-               , winMeanSD = meanSD (winN stats) (fst winSums) (snd winSums)
+               , winMeanSD = meanSD winN (fst winSums) (snd winSums)
                , lossNFrac = nFrac lossN n
                , lossMinMax = ( fst $ fromJust $ find ((/= 0) . snd) $
                                                       losses stats
                               , fst $ fromJust $ find ((/= 0) . snd) $
                                                       reverse $ losses stats )
-               , lossMeanSD = meanSD (lossN stats) (fst lossSums)
-                                     (snd lossSums)
+               , lossMeanSD = meanSD lossN (fst lossSums) (snd lossSums)
                , timeoutNFrac = nFrac (timeouts stats) n }
   where
     n = winN + lossN + timeouts stats
@@ -55,8 +55,8 @@ getCleanStats stats =
     lossSums = sums $ losses stats
     sums :: [(Int, Int)] -> (Integer, Integer)
     sums freqs = foldr (\(x, x2) (s, s2) ->
-                        (fromIntegral x + s, fromIntegral x2 + s2) (0, 0) $
-                       map (\(n, r) -> (n*r, n*r*r)) freqs
+                        (fromIntegral x + s, fromIntegral x2 + s2)) (0, 0) $
+                       map (\(c, r) -> (c*r, c*r*r)) freqs
 
 
 -- | Accumulate RawStats from the given input String. This function uses a
@@ -68,11 +68,11 @@ getRawStats raw = foldl' collect blankRawStats $ filter isEndGame $ lines raw
     -- Read a GameEnd from an endgame-defining line and update the RawStats
     collect stats str =
         case read str of
-          Win i   -> stats { wins = let wFs = incFreqs i $ winFreqs stats
+          Win i   -> stats { wins = let wFs = incFreqs i $ wins stats
                                     in wFs `deepseq` wFs }
-          Loss i  -> stats { losses = let lFs = incFreqs i $ lossFreqs stats
+          Loss i  -> stats { losses = let lFs = incFreqs i $ losses stats
                                       in lFs `deepseq` lFs }
-          Timeout -> stats { timeouts = timeoutN stats + 1 }
+          Timeout -> stats { timeouts = timeouts stats + 1 }
     -- Determine whether a line of input defines an endgame
     isEndGame str | not $ null str = or $ map (== head str) "WLT"
     isEndGame _                    = False
