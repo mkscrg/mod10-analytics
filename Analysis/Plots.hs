@@ -6,9 +6,6 @@ module Analysis.Plots where
 
 
 import Data.Array ( listArray )
-import Data.List ( stripPrefix )
-import Data.Maybe ( mapMaybe )
-import System ( getArgs )
 import System.Exit ( ExitCode )
 
 import qualified Graphics.Gnuplot.Advanced as Plot
@@ -20,16 +17,20 @@ import qualified Graphics.Gnuplot.Frame.Option as Opt
 import qualified Graphics.Gnuplot.Frame.OptionSet as Opts
 import qualified Graphics.Gnuplot.Frame as Frame
 
+import Analysis.Scrape ( RawStats(..) )
+
 
 -- | Extract the frequency data from a chunk of the stats file, and construct
 -- the IO action necessary to make a .png plot of the data.
-makePlot :: [String] -> IO ExitCode
-makePlot run = Plot.plot term $ MultiPlot.simpleFromPartArray $
-               listArray ((0::Int, 0::Int), (1, 0)) $
-               map MultiPlot.partFromFrame frames
+makePlot :: RawStats     -- ^ includes the relevant frequency data
+         -> Int          -- ^ the # of games played, for the figure title
+         -> IO ExitCode
+makePlot stats n = Plot.plot term $ MultiPlot.simpleFromPartArray $
+                      listArray ((0::Int, 0::Int), (1, 0)) $
+                                map MultiPlot.partFromFrame frames
   where
     frames = zipWith Frame.cons options $
-             map (Plot2D.list Graph2D.lines) freqs
+                map (Plot2D.list Graph2D.lines) [wins stats, losses stats]
     options = map (\o -> o genOpt) [topOpt, botOpt]
     topOpt = Opts.title figtitle .
              Opts.add (Opt.custom "bmargin") ["0.0"] .
@@ -41,14 +42,8 @@ makePlot run = Plot.plot term $ MultiPlot.simpleFromPartArray $
     genOpt = Opts.xRange2d (0,1500) $
              Opts.remove Opt.yTicks $
              Opts.remove Opt.key Opts.deflt
-    term = PNG.fontLarge $
-           PNG.cons fname
-    figtitle = "# of Rounds in Winning and Losing Games (" ++
-               last (words (run !! 1)) ++ ")"
-    fname = plotFilename $ head run
-    freqs = map (\lab -> read $ head $ mapMaybe (stripPrefix lab) run)
-                dataLabels :: [[(Int,Int)]]
-    dataLabels = ["    win freq.s: ", "   loss freq.s: "]
+    term = PNG.fontLarge $ PNG.cons "plot.png"
+    figtitle = "# of Rounds in Winning and Losing Games (" ++ show n ++ ")"
 
 
 -- | Strip a FilePath's [rightmost] extension, and replace with ".png"

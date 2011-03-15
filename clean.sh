@@ -2,7 +2,7 @@
 
 # Clean project directories of compiled and intermediate files.
 
-rm *.hi *.o simulate analyze
+rm *.hi *.o *.gp simulate analyze
 cd Simulation
 rm *.hi *.o
 cd ..

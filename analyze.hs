@@ -5,11 +5,12 @@
 module Main ( main ) where
 
 
-import Data.List ( find, intersperse )
-import System.IO ( hClose, hGetContents )
+import Data.List ( find, foldl', intersperse )
+import System.Exit ( ExitCode(..) )
+import System.IO ( hClose, hGetContents, hPutStrLn )
 
 import Analysis.Params
---import Analysis.Plots
+import Analysis.Plots
 import Analysis.Scrape
 
 
@@ -19,10 +20,13 @@ import Analysis.Scrape
 main :: IO ()
 main = do
     params <- getParams
-    raw <- hGetContents $ inH params
-    let stats = let s1 = getRawStats raw
-                in s1
-    putStrLn $ show $ getCleanStats stats
+    inStr <- hGetContents $ inH params
+    let rStats = getRawStats inStr
+    let cStats = getCleanStats rStats
+    hPutStrLn (outH params) $ show cStats
+    _ <- if plots params
+           then makePlot rStats $ count cStats
+           else return ExitSuccess
     hClose $ inH params
     hClose $ outH params
 
@@ -42,8 +46,8 @@ getCleanStats stats =
                , timeoutNFrac = nFrac (timeouts stats) n }
   where
     n = winN + lossN + timeouts stats
-    winN = sum $ map snd (wins stats)
-    lossN = sum $ map snd (losses stats)
+    winN = foldl' (+) 0 $ map snd (wins stats)
+    lossN = foldl' (+) 0 $ map snd (losses stats)
     winSums = sums $ wins stats
     lossSums = sums $ losses stats
     findFirst freqs = case find ((/= 0) . snd) freqs of
@@ -101,8 +105,7 @@ data CleanStats =
 -- | Produce a String representation of the curated statistics
 instance Show CleanStats where
     show stats = concat $ intersperse "\n"
-        [ "overall ..."
-        , "  games played: " ++ show (count stats)
+        [ "games played: " ++ show (count stats)
         , "winning ..."
         , "      (n,frac): " ++ show (winNFrac stats)
         , "     (min,max): " ++ show (winMinMax stats)
