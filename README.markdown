@@ -13,7 +13,7 @@ Mod10 is a simple solitaire card game, in which the player lays down cards in
 piles and picks up cards from those piles under certain conditions. There's a
 full explanation of the game's rules, with helpful pictures, in a [blog
 post](http://mkscrg.github.com/2011/02/02/mod10-a-game-youve-never-played/) of
-mine. Give it a try with a real deck, or if you're running Mac OS X, you can
+mine. Give it a try with a real deck, or, if you're running Mac OS X, you can
 find a playable version of the game [here](https://github.com/mkscrg/Mod10).
 Both a universal binary and the source code are available, compatible with Snow
 Leopard or later.
@@ -83,7 +83,7 @@ We've got some basic answers, now:
 + Of the non-looping games, about 2.4% are winners, while the remaining 97.6%
   are losers.
 + The average losing game is shorter than the average winning game, and the
-  winners are more-widely distributed. So games that run longer than about 100
+  winners are more widely distributed. So games that run longer than about 100
   turns are more likely to be winners.
 
 This is interesting information--especially the last point--but we'd really
