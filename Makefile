@@ -11,10 +11,10 @@ analyze : analyze.hs Analysis/Params.hs Analysis/Scrape.hs Analysis/Plots.hs
 
 clean :
 	rm *.hi *.o
-	rm Simulation/*.hi Simulation/*.o
-	rm Analysis/*.hi Analysis/*.o
 	rm simulate
+	rm Simulation/*.hi Simulation/*.o
 	rm analyze
+	rm Analysis/*.hi Analysis/*.o
 
 clean-plots :
 	rm *.gp
