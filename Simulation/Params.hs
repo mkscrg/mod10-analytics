@@ -1,8 +1,8 @@
 -- | The Params module uses the System.Console.GetOpt library to parse
 -- command-line arguments for Mod10.
-module Params ( getParams
-              , RunParams(..)
-              ) where
+module Simulation.Params ( getParams
+                         , RunParams(..)
+                         ) where
 
 
 import System ( getArgs, exitWith

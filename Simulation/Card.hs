@@ -1,8 +1,8 @@
 -- | The Card module defines the basic data types for a card game, as well as a
 -- shuffling function for lists.
-module Card ( newDeck, shuffle
-            , Card, HasValue(..)
-            ) where
+module Simulation.Card ( newDeck, shuffle
+                       , Card, HasValue(..)
+                       ) where
 
 
 import Data.List ( sortBy )

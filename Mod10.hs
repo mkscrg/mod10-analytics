@@ -10,8 +10,8 @@ module Main ( main ) where
 import System.IO ( hClose, hPrint, hPutStr )
 import System.Random ( newStdGen )
 
-import Mechanics
-import Params
+import Simulation.Mechanics
+import Simulation.Params
 
 
 -- | Play the game by the parameters parsed by 'getParams'.
@@ -37,9 +37,10 @@ playGame rp@(RunParams {nGames=n, outH=h,verbose=v}) = do
       else return ()
     playGame rp { nGames = n - 1 }
   where
-    run g@(InPlay {}) = do if v
-                             then do hPrint h g
-                                     hPutStr h "\n"
-                             else return ()
-                           run $ play g
-    run g             = return g
+    run g@(InPlay {}) = do
+        if v
+          then do hPrint h g
+                  hPutStr h "\n"
+          else return ()
+        run $ play g
+    run g = return g

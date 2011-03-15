@@ -1,14 +1,14 @@
 -- | The Mechanics module defines the game logic of Mod10, from detection of
 -- valid triplets to playing whole turns.
-module Mechanics ( play, newGame
-                 , GameState(..)
-                 ) where
+module Simulation.Mechanics ( play, newGame
+                            , GameState(..)
+                            ) where
 
 
 import Data.List ( elemIndex, intersperse )
 import System.Random ( RandomGen )
 
-import Card
+import Simulation.Card
 
 
 -- | Play a single turn of the game, first checking for win/loss/timeout.

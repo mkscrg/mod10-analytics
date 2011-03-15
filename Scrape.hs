@@ -3,7 +3,7 @@
 -- These statistics may then be plotted by FreqPlot.
 -- TODO: This implementation is somewhat redundant. The RawStats record needn't
 -- include anything more than the winFreqs and lossFreqs members. All other
--- information can be computer after accumulating those lists. Fix this!
+-- information can be computed after accumulating those lists. Fix this!
 module Main ( main ) where
 
 
@@ -33,19 +33,30 @@ main = do
 getCleanStats :: RawStats -> CleanStats
 getCleanStats stats =
     CleanStats { count = n
-               , winNFrac = nFrac (winN stats) n
-               , winMinMax = ( fromIntegral $ winMin stats
-                             , fromIntegral $ winMax stats )
-               , winMeanSD = meanSD (winN stats) (winSumX stats)
-                                    (winSumXX stats)
-               , lossNFrac = nFrac (lossN stats) n
-               , lossMinMax = ( fromIntegral $ lossMin stats
-                              , fromIntegral $ lossMax stats )
-               , lossMeanSD = meanSD (lossN stats) (lossSumX stats)
-                                    (lossSumXX stats)
-               , timeoutNFrac = nFrac (timeoutN stats) n }
+               , winNFrac = nFrac winN n
+               , winMinMax = ( fst $ fromJust $ find ((/= 0) . snd) $
+                                                     wins stats
+                             , fst $ fromJust $ find ((/= 0) . snd) $
+                                                     reverse $ wins stats )
+               , winMeanSD = meanSD (winN stats) (fst winSums) (snd winSums)
+               , lossNFrac = nFrac lossN n
+               , lossMinMax = ( fst $ fromJust $ find ((/= 0) . snd) $
+                                                      losses stats
+                              , fst $ fromJust $ find ((/= 0) . snd) $
+                                                      reverse $ losses stats )
+               , lossMeanSD = meanSD (lossN stats) (fst lossSums)
+                                     (snd lossSums)
+               , timeoutNFrac = nFrac (timeouts stats) n }
   where
-    n = winN stats + lossN stats + timeoutN stats
+    n = winN + lossN + timeouts stats
+    winN = sum $ map snd (wins stats)
+    lossN = sum $ map snd (losses stats)
+    winSums = sums $ wins stats
+    lossSums = sums $ losses stats
+    sums :: [(Int, Int)] -> (Integer, Integer)
+    sums freqs = foldr (\(x, x2) (s, s2) ->
+                        (fromIntegral x + s, fromIntegral x2 + s2) (0, 0) $
+                       map (\(n, r) -> (n*r, n*r*r)) freqs
 
 
 -- | Accumulate RawStats from the given input String. This function uses a
@@ -57,22 +68,11 @@ getRawStats raw = foldl' collect blankRawStats $ filter isEndGame $ lines raw
     -- Read a GameEnd from an endgame-defining line and update the RawStats
     collect stats str =
         case read str of
-          Win i   -> stats { winN = winN stats + 1
-                           , winMin = min i $ winMin stats
-                           , winMax = max i $ winMax stats
-                           , winSumX = winSumX stats + fromIntegral i
-                           , winSumXX = winSumXX stats + sqr i
-                           , winFreqs = let wFs = incFreqs i $ winFreqs stats
-                                        in wFs `deepseq` wFs }
-          Loss i  -> stats { lossN = lossN stats + 1
-                           , lossMin = min i $ lossMin stats
-                           , lossMax = max i $ lossMax stats
-                           , lossSumX = lossSumX stats + fromIntegral i
-                           , lossSumXX = lossSumXX stats + sqr i
-                           , lossFreqs = let lFs = incFreqs i $ lossFreqs stats
-                                         in lFs `deepseq` lFs }
-          Timeout -> stats { timeoutN = timeoutN stats + 1 }
-    sqr i = fromIntegral $ i^(2::Int)
+          Win i   -> stats { wins = let wFs = incFreqs i $ winFreqs stats
+                                    in wFs `deepseq` wFs }
+          Loss i  -> stats { losses = let lFs = incFreqs i $ lossFreqs stats
+                                      in lFs `deepseq` lFs }
+          Timeout -> stats { timeouts = timeoutN stats + 1 }
     -- Determine whether a line of input defines an endgame
     isEndGame str | not $ null str = or $ map (== head str) "WLT"
     isEndGame _                    = False
@@ -109,19 +109,9 @@ meanSD n sumX sumXX =
 
 -- | An initialized RawStats, as a base for accumulation from input.
 blankRawStats :: RawStats
-blankRawStats = RawStats { winN = 0
-                         , winMin = tOCount
-                         , winMax = 0
-                         , winSumX = 0
-                         , winSumXX = 0
-                         , winFreqs = wFs
-                         , lossN = 0
-                         , lossMin = tOCount
-                         , lossMax = 0
-                         , lossSumX = 0
-                         , lossSumXX = 0
-                         , lossFreqs = lFs
-                         , timeoutN = 0 }
+blankRawStats = RawStats { wins = wFs
+                         , losses = lFs
+                         , timeouts = 0 }
   where
     wFs = zip [7,10..tOCount] zeros
     lFs = zip [37,40..tOCount] zeros
@@ -150,48 +140,28 @@ data CleanStats =
 
 -- | Produce a String representation of the curated statistics
 instance Show CleanStats where
-    show sts = concat $ intersperse "\n"
-        [ "  games played: " ++ show (count sts)
+    show stats = concat $ intersperse "\n"
+        [ "  games played: " ++ show (count stats)
         , "winning"
-        , "      (n,frac): " ++ show (winNFrac sts)
-        , "     (min,max): " ++ show (winMinMax sts)
-        , "  (mean,stDev): " ++ show (winMeanSD sts)
+        , "      (n,frac): " ++ show (winNFrac stats)
+        , "     (min,max): " ++ show (winMinMax stats)
+        , "  (mean,stDev): " ++ show (winMeanSD stats)
         , "losing"
-        , "      (n,frac): " ++ show (lossNFrac sts)
-        , "     (min,max): " ++ show (lossMinMax sts)
-        , "  (mean,stDev): " ++ show (lossMeanSD sts)
+        , "      (n,frac): " ++ show (lossNFrac stats)
+        , "     (min,max): " ++ show (lossMinMax stats)
+        , "  (mean,stDev): " ++ show (lossMeanSD stats)
         , "timeout"
-        , "      (n,frac): " ++ show (timeoutNFrac sts) ]
+        , "      (n,frac): " ++ show (timeoutNFrac stats) ]
 
 
--- | Raw statistics accumulated from the input, with strict record types to
--- prevent memory leakage when accumulating over lots of input.
+-- | Raw statistics accumulated from the input, with strict members to prevent
+-- memory leakage when accumulating over lots of input.
 data RawStats =
-      RawStats { winN :: !Int
-               -- ^ Number of wins
-               , winMin :: !Int
-               -- ^ Smallest # of turns in a winning game
-               , winMax :: !Int
-               -- ^ Greatest # of turns in a winning game
-               , winSumX :: !Integer
-               -- ^ Sum of # of turns in winning games
-               , winSumXX :: !Integer
-               -- ^ Sum of squares of # of turns in winning games
-               , winFreqs :: ![(Int,Int)]
+      RawStats { wins :: ![(Int,Int)]
                -- ^ List of (# of turns, # of wins) pairs
-               , lossN :: !Int
-               -- ^ Number of losses
-               , lossMin :: !Int
-               -- ^ Smallest # of turns in a losing game
-               , lossMax :: !Int
-               -- ^ Greatest # of turns in a losing game
-               , lossSumX :: !Integer
-               -- ^ Sum of # of turns in losing games
-               , lossSumXX :: !Integer
-               -- ^ Sum of squares of # of turns in losing games
-               , lossFreqs :: ![(Int,Int)]
+               , losses :: ![(Int,Int)]
                -- ^ List of (# of turns, # of losses) pairs
-               , timeoutN :: !Int
+               , timeouts :: Int
                -- ^ Number of timeouts
                } deriving (Show)
 
