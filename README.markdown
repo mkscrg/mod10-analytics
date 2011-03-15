@@ -72,7 +72,7 @@ from `./simulate -n 100000 | ./analyze --plots` looks like this:
              (# games, frac. of total): (408,4.08e-3)
 
 The .png plot produced by that run is
-[here](https://github.com/mkscrg/mod10-analytics/raw/improvements/plot.png).
+[here](https://github.com/mkscrg/mod10-analytics/raw/master/plot.png).
 
 ### In Search of Better Odds
 
