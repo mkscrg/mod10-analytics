@@ -1,5 +1,5 @@
--- | The Card module defines the basic data types for a card game, as well as a
--- shuffling function for lists.
+-- | The Simulation.Card module defines the basic data types for a card game,
+-- as well as a shuffling function for lists.
 module Simulation.Card ( newDeck, shuffle
                        , Card, HasValue(..)
                        ) where

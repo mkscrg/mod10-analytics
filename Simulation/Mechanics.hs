@@ -1,5 +1,5 @@
--- | The Mechanics module defines the game logic of Mod10, from detection of
--- valid triplets to playing whole turns.
+-- | The Simulation.Mechanics module defines the game logic of Mod10, from
+-- detection of valid triplets to playing whole turns.
 module Simulation.Mechanics ( play, newGame
                             , GameState(..)
                             ) where

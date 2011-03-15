@@ -1,5 +1,5 @@
--- | The Params module uses the System.Console.GetOpt library to parse
--- command-line arguments for Mod10.
+-- | The Simulation.Params module uses the System.Console.GetOpt library to
+-- parse command-line arguments for the simulate executable.
 module Simulation.Params ( getParams
                          , RunParams(..)
                          ) where
@@ -71,8 +71,8 @@ dump = hPutStrLn stderr
 
 -- | Header string, showing the command syntax.
 header :: String
-header = "Mod10 [-h/--help] [-o/--outfile fname] [-n/--ngames N] " ++ 
-               "[-v/--verbose]"
+header = "simulate [-h/--help] [-o/--outfile fname] [-n/--ngames N] " ++
+                  "[-v/--verbose]"
 
 
 -- | Options definition.
@@ -91,7 +91,7 @@ data RunParams =
     RunParams { nGames :: Int    -- ^ Number of games unfinished
               , outH :: Handle   -- ^ Handle of output location
               , verbose :: Bool  -- ^ Whether to print GameState at each turn
-              } deriving (Show)
+              }
 
 
 data Flag = Help
@@ -99,4 +99,3 @@ data Flag = Help
           | NGames Int        -- ^ User-spec'd number of games
           | Verbose           -- ^ User-spec'd verbosity
             deriving (Eq)
-
