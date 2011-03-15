@@ -27,16 +27,19 @@ main = do
 -- Recurse and play another game if the number of games parameter is not 1.
 playGame :: RunParams -> IO ()
 playGame RunParams {nGames=n} | n == 0              = return ()
-playGame rp@(RunParams {nGames=n, outH=h,verbose=v}) = do
+playGame rp@(RunParams {filt=f, nGames=n, outH=h, verbose=v}) = do
     seed <- newStdGen
     let g = newGame seed
-    g' <- run g
+    g' <- if f
+            then runFilter g
+            else run g
     hPrint h g'
     if v
       then hPutStr h "\n\n"
       else return ()
     playGame rp { nGames = n - 1 }
   where
+    run :: GameState -> IO GameState
     run g@(InPlay {}) = do
         if v
           then do hPrint h g
@@ -44,3 +47,17 @@ playGame rp@(RunParams {nGames=n, outH=h,verbose=v}) = do
           else return ()
         run $ play g
     run g = return g
+    runFilter :: GameState -> IO GameState
+    runFilter g@(InPlay {}) = do
+        if v
+          then do hPrint h g
+                  hPutStr h "\n"
+          else return ()
+        case ctr g of
+          c | c < 6  -> runFilter $ play g
+          _ -> if length (filter (not . null) $
+                                 stacks g) <= length (stacks g) - threshold
+                 then run $ play g
+                 else return Timeout
+    runFilter g = run g
+    threshold = 1
