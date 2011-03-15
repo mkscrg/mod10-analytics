@@ -3,8 +3,9 @@
 Last updated by Mike S. Craig, March 2011
 
 This is a small Haskell project to explore various aspects of the Mod10 card
-game. It's "fully functional" at this point, but there's a lot of potential for
-expansion. The whole project is unlicensed, i.e. it's in the public domain.
+game. It is "fully functional" at this point, but there is a lot of potential
+for expansion, as discussed below. The whole project is unlicensed, i.e. it's
+in the public domain.
 
 ### The Game of Mod10
 
@@ -70,7 +71,8 @@ from `./simulate -n 100000 | ./analyze --plots` looks like this:
     timeout ...
              (# games, frac. of total): (408,4.08e-3)
 
-The .png plot produced by that run is [here](./plot1.png).
+The .png plot produced by that run is
+[here](https://github.com/mkscrg/mod10-analytics/raw/improvements/plot.png).
 
 ### In Search of Better Odds
 
