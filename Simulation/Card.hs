@@ -1,5 +1,5 @@
--- | The Simulation.Card module defines the basic data types for a card game,
--- as well as a shuffling function for lists.
+-- | The 'Simulation.Card' module defines the basic data types for the
+-- @simulate@ executable, as well as a shuffling function for lists.
 module Simulation.Card ( newDeck, shuffle
                        , Card, HasValue(..)
                        ) where
@@ -10,7 +10,7 @@ import System.Random ( randoms
                      , RandomGen )
 
 
--- | An unsorted deck with all possible Cards
+-- | An unsorted deck with all 52 possible 'Card's
 newDeck :: [Card]
 newDeck = [ Card v s | v <- vs, s <- ss ]
   where
@@ -19,7 +19,7 @@ newDeck = [ Card v s | v <- vs, s <- ss ]
     ss = [Club, Diamond, Heart, Spade]
 
 
--- | Decorate xs with random ints, sort the decorated pairs, then undecorate.
+-- | Decorate xs with random 'Int's, sort the decorated pairs, then undecorate.
 shuffle :: RandomGen r => r -> [a] -> [a]
 shuffle rgen xs = map snd (sortBy (\(x, _) (y, _) -> compare x y) zlist)
   where

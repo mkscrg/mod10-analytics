@@ -1,11 +1,11 @@
--- | The Analysis.Params module uses the System.Console.GetOpt library to
--- parse command-line arguments for the analyze executable.
+-- | The 'Analysis.Params' module uses the 'System.Console.GetOpt' library to
+-- parse command-line options for the @analyze@ executable.
 module Analysis.Params ( getParams
                       , RunParams(..)
                       ) where
 
 
-import Data.List ( find )
+import Data.Maybe ( mapMaybe )
 import System ( getArgs, exitWith
               , ExitCode(..) )
 import System.Console.GetOpt ( getOpt, usageInfo
@@ -16,7 +16,7 @@ import System.IO.Error ( ioeGetErrorString )
 
 
 -- | Get the command-line arguments and validate them if reasonable. Print help
--- info if requested, and exit with error if arguments were unreasonable.
+-- info if requested, and exit with error(s) if the arguments were unreasonable.
 getParams :: IO RunParams
 getParams = do
     argv <- getArgs
@@ -26,16 +26,21 @@ getParams = do
       (flags, _, _)                     -> validate flags
 
 
--- | Convert a reasonable set of Flags into a RunParams record, using default
--- values where necessary. Exit with error if an invalid filename was given.
+-- | Convert a reasonable set of 'Flag's into a 'RunParams' record, using
+-- default values where necessary. Exit with error if an invalid filename was
+-- given.
 validate :: [Flag] -> IO RunParams
 validate flags = do
-    o <- case find (\f -> case f of { OutFile _ -> True; _ -> False }) flags
-           of Just (OutFile fpath) -> valPath fpath WriteMode
-              _                    -> return stdout
-    i <- case find (\f -> case f of { InFile _ -> True; _ -> False }) flags
-           of Just (InFile fpath) -> valPath fpath ReadMode
-              _                   -> return stdin
+    i <- case mapMaybe (\flag -> case flag of
+                                   InFile fpath -> Just fpath
+                                   _            -> Nothing) flags of
+           (fpath:_) -> valPath fpath ReadMode
+           []        -> return stdin
+    o <- case mapMaybe (\flag -> case flag of
+                                   OutFile fpath -> Just fpath
+                                   _             -> Nothing) flags of
+           (fpath:_) -> valPath fpath WriteMode
+           []        -> return stdout
     let p = Plots `elem` flags
     return $ RunParams { inH = i
                        , outH = o
@@ -60,14 +65,15 @@ info :: String
 info = usageInfo header options
 
 
--- | Print to stderr.
+-- | Print to 'System.IO.stderr'.
 dump :: String -> IO ()
 dump = hPutStrLn stderr
 
 
 -- | Header string, showing the command syntax.
 header :: String
-header = "scrape [-h/--help] [-i/--infile fpath] [-o/--outfile fpath] "
+header = "analyze [-h/--help] [-i/--infile fpath] [-o/--outfile fpath] " ++
+                 "[-p/--plots]"
 
 
 -- | Options definition.
@@ -82,6 +88,7 @@ options = [ Option ['h'] ["help"] (NoArg Help)
                    "Makes plots of win/loss frequencies using gnuplot" ]
 
 
+-- | Record which governs how @analyze@ runs
 data RunParams =
     RunParams { inH :: Handle
               -- ^ Handle of input path
@@ -95,6 +102,6 @@ data RunParams =
 data Flag = Help
           | InFile FilePath   -- ^ User-spec'd input path
           | OutFile FilePath  -- ^ User-spec'd output path
-          | Plots
+          | Plots             -- ^ Generate plots of input data
             deriving (Eq)
 

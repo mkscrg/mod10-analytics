@@ -1,5 +1,6 @@
--- | The Simulation.Mechanics module defines the game logic of Mod10, from
--- detection of valid triplets to playing whole turns.
+-- | The 'Simulation.Mechanics' module defines the game logic of Mod10, from
+-- detection of valid triplets to playing whole turns, for the @simulate@
+-- executable.
 module Simulation.Mechanics ( play, newGame
                             , GameState(..)
                             ) where
@@ -11,7 +12,7 @@ import System.Random ( RandomGen )
 import Simulation.Card
 
 
--- | Play a single turn of the game, first checking for win/loss/timeout.
+-- | Play a single turn of the game, first checking for 'Win'/'Loss'/'Timeout'.
 play :: GameState -> GameState
 play InPlay {deck=d, ctr=n}    | null d            = Loss n
 play InPlay {stacks=ss, ctr=n} | and $ map null ss = Win n
@@ -20,7 +21,7 @@ play g@(InPlay {})                                 = feedNext $ pickUp g
 play g                                             = g
 
 
--- | Produce a ready-to-play GameState from a shuffled deck.
+-- | Produce a ready-to-play 'GameState' from a shuffled deck.
 newGame :: (RandomGen r) => r -> GameState
 newGame rgen = let (s, d) = splitAt (nStacks * 2 + 1) $ shuffle rgen newDeck
                in InPlay { deck = d
@@ -72,8 +73,12 @@ feedNext g@(InPlay {deck=d, stacks=ss, csi=i}) =
 feedNext g = g
 
 
--- | Move cards, designated by a Triplet, from src to the end of dst.
-moveTriplet :: Triplet -> [a] -> [a] -> ([a], [a])
+-- | Move cards, designated by a 'Triplet', from the src list to the end of the
+-- dst list.
+moveTriplet :: Triplet     -- ^ Designates the cards to be taken from src
+            -> [a]         -- ^ src list (usually a stack)
+            -> [a]         -- ^ dst stack (usually the deck)
+            -> ([a], [a])  -- ^ Modified (source, destination)
 moveTriplet Top    src dst = let (a, b) = splitAt (length src - 2) src
                              in (tail a, dst ++ head a : b)
 moveTriplet Middle src dst = let (a, b) = splitAt 2 src
@@ -82,9 +87,9 @@ moveTriplet Bottom src dst = let (a, b) = splitAt 3 src
                              in (b, dst ++ a)
 
 
--- | Check a stack for a valid triplet. in the case of multiple valid triplets,
--- order of precedence is Top, Middle, then Bottom.
--- (This is not necessarily optimal strategy!)
+-- | Check a list of 'Card's for a valid triplet. In the case of multiple valid
+-- triplets, order of precedence is 'Top', 'Middle', then 'Bottom'. (This is
+-- probably not the optimal strategy, but it's a relatively rare choice.)
 findTriplet :: (HasValue a) => [a] -> Maybe Triplet
 findTriplet cs | len >= 3 =
     if valTrip $ head cs : drop (len - 2) cs
@@ -100,9 +105,12 @@ findTriplet cs | len >= 3 =
 findTriplet _ = Nothing
 
 
--- | "Deal" the elements of src into the lists of dst, by zipWith'ing dst with
--- dst-length pieces of src, by list construction.
-feedAll :: [a] -> [[a]] -> [[a]]
+-- | "Deal" the elements of the src list into the dst list of lists, by
+-- zipWith'ing the dst list with dst-length pieces of src, by list
+-- construction.
+feedAll :: [a]    -- ^ src list
+        -> [[a]]  -- ^ dst list of lists
+        -> [[a]]  -- ^ Modified dst
 feedAll src dst = feeder padSrc dst
   where
     feeder [] d = d
@@ -124,7 +132,7 @@ data GameState =
            , ctr :: Int }        -- ^ The number of turns played
 
 -- | Produce a human-readable String representation of all aspects of a
--- GameState.
+-- 'GameState'.
 instance Show GameState where
     show (Win i)  = "Win " ++ show i
     show (Loss i) = "Loss " ++ show i

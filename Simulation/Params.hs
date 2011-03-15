@@ -1,5 +1,5 @@
--- | The Simulation.Params module uses the System.Console.GetOpt library to
--- parse command-line arguments for the simulate executable.
+-- | The 'Simulation.Params' module uses the 'System.Console.GetOpt' library to
+-- parse command-line options for the @simulate@ executable.
 module Simulation.Params ( getParams
                          , RunParams(..)
                          ) where
@@ -26,16 +26,16 @@ getParams = do
       (flags, _, _)                            -> validate flags
 
 
--- | Convert a reasonable set of Flags into a RunParams record, using default
+-- | Turn a reasonable set of 'Flag's into a 'RunParams' record, using default
 -- values where necessary. Exit with error if an invalid filename was given.
 validate :: [Flag] -> IO RunParams
 validate flags = do
     let f = Filter `elem` flags
-    let n =  case mapMaybe (\flag -> case flag of
-                                       NGames n' -> Just n'
-                                       _         -> Nothing) flags of
-               (n':_) -> n'
-               []     -> 1
+    let n = case mapMaybe (\flag -> case flag of
+                                      NGames n' -> Just n'
+                                      _         -> Nothing) flags of
+              (n':_) -> n'
+              []     -> 1
     o <- case mapMaybe (\flag -> case flag of
                                    OutFile fpath -> Just fpath
                                    _             -> Nothing) flags of
@@ -66,7 +66,7 @@ info :: String
 info = usageInfo header options
 
 
--- | Print to stderr.
+-- | Print to 'System.IO.stderr'.
 dump :: String -> IO ()
 dump = hPutStrLn stderr
 
@@ -82,7 +82,7 @@ options :: [OptDescr Flag]
 options = [ Option ['h'] ["help"] (NoArg Help)
                    "Prints this help message"
           , Option ['f'] ["filter"] (NoArg Filter)
-                   "Filters games by stack elimination after first triplets"
+                   "Timeout if # of stacks hasn't decreased after first row"
           , Option ['n'] ["ngames"] (ReqArg (\s -> NGames (read s)) "N")
                    "Specify how many games are played (default 1)"
           , Option ['o'] ["outfile"] (ReqArg (\s -> OutFile s) "fname")
@@ -91,6 +91,7 @@ options = [ Option ['h'] ["help"] (NoArg Help)
                    "Prints full game rounds" ]
 
 
+-- | Record which governs how @simulate@ runs
 data RunParams =
     RunParams { filt :: Bool
               -- ^ Whether to filter games after first triplets are dealt

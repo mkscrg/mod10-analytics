@@ -1,6 +1,6 @@
 ## mod10-analytics
 
-Written by Michael S. Craig, 2011/01-02
+Last updated by Michael S. Craig, March 2011
 
 This is a small Haskell project to explore various aspects of the Mod10 card
 game. At this stage, it is fully functional and well-documented. It's still a
